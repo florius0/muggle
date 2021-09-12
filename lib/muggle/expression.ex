@@ -10,7 +10,6 @@ defmodule Muggle.Expression do
   @callback new(any()) :: t()
   @callback validate(t()) :: either()
   @callback validate_argument(any(), integer(), args()) :: {:ok, any()} | error()
-  @callback transform(t()) :: either()
 
   defmacro __using__(_) do
     quote do
@@ -42,9 +41,6 @@ defmodule Muggle.Expression do
 
       defp _validate_argument(%{__struct__: m} = x, _, _), do: m.validate(x)
       defp _validate_argument(x, i, a), do: validate_argument(x, i, a)
-
-      @impl true
-      def transform(expr), do: {:ok, expr}
 
       defoverridable Muggle.Expression
     end

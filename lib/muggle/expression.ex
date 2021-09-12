@@ -7,6 +7,7 @@ defmodule Muggle.Expression do
   @type error() :: {:error, {module(), any()}}
   @type either() :: ok() | error()
 
+  @callback new() :: t()
   @callback new(any()) :: t()
   @callback validate(t()) :: either()
   @callback validate_argument(any(), integer(), args()) :: {:ok, any()} | error()
@@ -18,6 +19,7 @@ defmodule Muggle.Expression do
       defstruct [:args]
 
       @impl true
+      def new(args \\ [])
       def new(args) when is_list(args), do: %__MODULE__{args: args}
       def new(args), do: %__MODULE__{args: [args]}
 

@@ -1,5 +1,8 @@
 # Muggle
 
+![WotStat CI](https://github.com/WOT-STAT/wotstat/actions/workflows/elixir.yml/badge.svg)
+[![codecov](https://codecov.io/gh/florius0/muggle/branch/main/graph/badge.svg?token=L5K6PU9R0F)](https://codecov.io/gh/florius0/muggle)
+
 **TODO: Add description**
 
 ## Installation

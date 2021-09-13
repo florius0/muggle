@@ -10,47 +10,51 @@ Muggle is a collection of behaviours to help with buillding DSLs in Elixir
 Define expressions
 
 ```elixir
-defmodule DSL.Expression do
+defmodule Calculator.Add do
   use Muggle.Expression
+
+  def validate_argument(x, _idx, _all_arguments) when is_number(x), do: {:ok, x}
+  def validate_argument(_, _, _), do: {:error, :not_a_number}
+
+  def validate(%__MODULE__{args: args} = x) when length(args) == 2, do: super(x)
+  def validate(_), do: {:error, {__MODULE__, :invalid_number_of_arguments}}
 end
 ```
 
 Define interpreter of your expressions
 
 ```elixir
-defmodule DSL.Interpreter
+defmodule Calculator.Interpreter do
   @behaviour Muggle.Interpreter
 
   @impl true
-  def run(expression, opts \\ []), do: {:ok, :hello_world}
+  def run(%Calculator.Add{args: [a, b]}, opts \\ []), do: {:ok, a + b}
 end
 ```
 
 Define your language
 
 ```elixir
-defmodule DSL.Language
-  alias DSL.Expression
-
+defmodule Calculator do
   use Muggle.Language, 
-    expressions: [
-      Expression, 
-      DSL.Expression, 
-      custom_name: Exprression
-    ],
-    interpreter: DSL.Interpreter
+    expressions: [add: Calculator.Add],
+    interpreter: Calculator.Interpreter
 end
 ```
 
 Use it
 
 ```elixir
-import DSL.Language
+iex(1)>import Calculator
 
-expression() |> run()
+iex(2)> add([1,2]) |> run()
+{:ok, 3}
 
-# override interpreter
-expression() |> run(interpreter: DSL.AnotherInterpreter)
+iex(3)> add([1, 2, 3]) |> run()
+{:error, {Calculator.Add, :invalid_number_of_arguments}}
+
+iex(4)> add([1, "string"]) |> run()
+{:error, {Calculator.Add, [ok: 1, error: :not_a_number]}}
 ```
 
 ## Roadmap

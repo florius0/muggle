@@ -45,7 +45,7 @@ end
 Use it
 
 ```elixir
-iex(1)>import Calculator
+iex(1)> import Calculator
 
 iex(2)> add([1,2]) |> run()
 {:ok, 3}

@@ -6,7 +6,7 @@ defmodule Muggle.MixProject do
       app: :muggle,
       version: "0.1.0",
       elixir: "~> 1.12",
-      start_permanent: Mix.env() == :prod,
+      test_coverage: [tool: ExCoveralls],
       deps: deps()
     ]
   end
@@ -19,7 +19,7 @@ defmodule Muggle.MixProject do
 
   defp deps do
     [
-
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 end

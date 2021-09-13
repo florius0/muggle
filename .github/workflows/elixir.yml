@@ -1,0 +1,100 @@
+name: Muggle CI
+
+on:
+  push:
+    branches: [main]
+    tags-ignore: ["v*"]
+  pull_request:
+    branches: [main]
+  create:
+    tags: ["v*"]
+    branches: master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / ${{matrix.mixenv}}
+    strategy:
+      fail-fast: false
+      matrix:
+        mixenv: [dev, test, prod]
+        include:
+          - elixir: 1.12.2
+            otp: 24.0.0
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MIX_ENV: ${{matrix.mixenv}}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            deps
+            _build
+          key: otp-${{matrix.otp}}-elixir-${{matrix.elixir}}-${{matrix.mixenv}}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          restore-keys: otp-${{matrix.otp}}-elixir-${{matrix.elixir}}-${{matrix.mixenv}}-
+      - run: mix deps.get
+      - run: mix compile
+  coverage:
+    needs: [build]
+    runs-on: ubuntu-latest
+    name: Report Test Coverage
+    strategy:
+      matrix:
+        include:
+          - elixir: 1.12.2
+            otp: 24.0.0
+            mixenv: test
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MIX_ENV: ${{matrix.mixenv}}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+        with:
+          semver_only: true
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            deps
+            _build
+          key: otp-${{matrix.otp}}-elixir-${{matrix.elixir}}-${{matrix.mixenv}}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          restore-keys: otp-${{matrix.otp}}-elixir-${{matrix.elixir}}-${{matrix.mixenv}}-
+      - run: mix deps.get
+      - run: mix coveralls.json -u
+      - uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./cover/excoveralls.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+  release:
+    needs: [build, coverage]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    name: Release
+    strategy:
+      matrix:
+        include:
+          - elixir: 1.12.2
+            otp: 24.0.0
+            mixenv: prod
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MIX_ENV: ${{matrix.mixenv}}
+    steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false

@@ -41,7 +41,10 @@ defmodule Muggle.Expression do
       @impl true
       def validate_argument(x, _, _), do: {:ok, x}
 
-      defp _validate_argument(%{__struct__: m} = x, _, _), do: m.validate(x)
+      defp _validate_argument(%{__struct__: m} = x, i, a) do
+        with {:ok, x} <- m.validate(x), do: validate_argument(x, i, a)
+      end
+
       defp _validate_argument(x, i, a), do: validate_argument(x, i, a)
 
       defoverridable Muggle.Expression

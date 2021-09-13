@@ -1,20 +1,27 @@
 defmodule Muggle.Language do
-  defmacro __using__(expressions: e) do
-    expressions = Enum.map(e, fn
-      {name, module} ->
-        {name, module}
+  @callback expressions() :: keyword(module())
+  @callback run(Muggle.Expression.t(), keyword()) ::
+              {:ok, any()} | {:error, any()} | Muggle.Expression.error()
 
-      module ->
-        {module
-         |> Macro.expand(__ENV__)
-         |> Module.split()
-         |> tl()
-         |> Enum.map(&String.downcase/1)
-         |> Enum.join("_")
-         |> String.to_atom(), module}
-    end)
+  defmacro __using__(expressions: e, interpreter: i) do
+    expressions =
+      Enum.map(e, fn
+        {name, module} ->
+          {name, module}
+
+        module ->
+          {module
+           |> Macro.expand(__ENV__)
+           |> Module.split()
+           |> Enum.map(&String.downcase/1)
+           |> Enum.join("_")
+           |> String.to_atom(), module}
+      end)
 
     quote do
+      @behaviour Muggle.Language
+
+      @impl true
       def expressions, do: unquote(expressions)
 
       unquote(
@@ -24,6 +31,13 @@ defmodule Muggle.Language do
           end
         end
       )
+
+      @impl true
+      def run(%{__struct__: m} = expression, opts \\ []) do
+        interpreter = Keyword.get(opts, :interpreter, unquote(i))
+
+        with {:ok, e} <- m.validate(expression), do: interpreter.run(expression, opts)
+      end
     end
   end
 end

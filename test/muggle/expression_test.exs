@@ -2,7 +2,7 @@ defmodule Muggle.ExpressionTest do
   use ExUnit.Case
   doctest Muggle.Expression
 
-  @error_msg "unsupported type"
+  @error_msg :unsupported_type
 
   defmodule Expression do
     use Muggle.Expression

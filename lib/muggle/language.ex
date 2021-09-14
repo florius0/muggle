@@ -33,10 +33,10 @@ defmodule Muggle.Language do
       )
 
       @impl true
-      def run(%{__struct__: m} = expression, opts \\ []) do
+      def run(expression, opts \\ []) do
         interpreter = Keyword.get(opts, :interpreter, unquote(i))
 
-        with {:ok, e} <- m.validate(expression), do: interpreter.run(expression, opts)
+        interpreter.run(expression, opts)
       end
     end
   end

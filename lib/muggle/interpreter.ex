@@ -8,8 +8,8 @@ defmodule Muggle.Interpreter do
       @behaviour Muggle.Interpreter
 
       @impl true
-      def run(%{} = expression, opts) do
-        _run_expression(expression, expression, opts)
+      def run(%{__struct__: m} = expression, opts) do
+        with {:ok, e} <- m.validate(expression), do: _run_expression(e, e, opts)
       end
 
       defp _run_expression(%{__struct__: m, args: args} = expression, env, opts) do

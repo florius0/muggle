@@ -5,13 +5,13 @@ defmodule Muggle.LanguageTest do
   defmodule Some.Expression do
     use Muggle.Expression
 
-    def validate_argument(_, _, _), do: {:error, nil}
+    def validate_argument(_, _, _), do: {:error, :expression_cant_be_valid}
   end
 
   defmodule Interpreter do
-    @behaviour Muggle.Interpreter
+    use Muggle.Interpreter
 
-    def run(_, _), do: nil
+    def run_expression(_, _, _), do: nil
   end
 
   defmodule Language do
@@ -41,9 +41,5 @@ defmodule Muggle.LanguageTest do
              some_expression: Some.Expression,
              custom_name: Some.Expression
            ] == Language.expressions()
-  end
-
-  test "Default implementation of run validates expression before passing it to interpreter" do
-    assert {:error, _} = Language.run(Language.expression([1]))
   end
 end

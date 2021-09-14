@@ -10,7 +10,8 @@ defmodule Muggle.InterpreterTest do
     use Muggle.Expression
 
     def validate_argument(x, _, _) when is_atom(x), do: {:ok, x}
-    def validate_argument(_, _, _), do: {:error, Muggle.ExpressionTest.error_msg()}
+    def validate_argument(x, _, _) when is_struct(x), do: {:ok, x}
+    def validate_argument(_, _, _), do: {:error, :unsupported_type}
   end
 
   defmodule Interpreter do
@@ -18,12 +19,11 @@ defmodule Muggle.InterpreterTest do
 
     def run_expression(%Expression{args: args}, _, _), do: {:ok, args}
 
-    def run_expression(%AnotherExpression{args: [atom1, atom2, atom3] = args}, _, _)
-        when is_atom(atom1) and is_atom(atom2) and is_atom(atom3),
-        do: {:ok, Enum.map(args, &Atom.to_string/1)}
+    def run_expression(%AnotherExpression{args: [_, _, _] = args}, _, _),
+      do: {:ok, Enum.map(args, &Atom.to_string/1)}
 
     def run_expression(%AnotherExpression{args: args}, _, _),
-      do: {:error, {AnotherExprssion, args, :some_argument_is_not_an_atom}}
+      do: {:error, {AnotherExprssion, args, :supports_only_3_args_due_to_bad_programming_skills}}
   end
 
   test "Default implentation of interpreter runs simple expressions" do
@@ -33,10 +33,11 @@ defmodule Muggle.InterpreterTest do
              {:ok, ["atom", "atom", "atom"]}
   end
 
-  test "Default implementation handles errors in simpple expressions" do
-    assert Interpreter.run(AnotherExpression.new([:atom, :atom, "not_an_atom"]), []) ==
+  test "Default implementation handles errors in simple expressions" do
+    assert Interpreter.run(AnotherExpression.new([:atom, :atom]), []) ==
              {:error,
-              {AnotherExprssion, [:atom, :atom, "not_an_atom"], :some_argument_is_not_an_atom}}
+              {AnotherExprssion, [:atom, :atom],
+               :supports_only_3_args_due_to_bad_programming_skills}}
   end
 
   test "Default implentation of interpreter runs nested expressions" do
@@ -46,9 +47,9 @@ defmodule Muggle.InterpreterTest do
            ) == {:ok, [1, 2, ["atom", "atom", "atom"]]}
   end
 
-  test "Default implementation of interpreter handles errors in neseted expressions" do
+  test "Default implementation of interpreter handles erors in neseted expressions" do
     assert Interpreter.run(
-             Expression.new([1, 2, AnotherExpression.new([:atom, :atom, "not_an_atom"])]),
+             Expression.new([1, 2, AnotherExpression.new([:atom, :atom])]),
              []
            ) ==
              {
@@ -58,8 +59,8 @@ defmodule Muggle.InterpreterTest do
                   ok: 1,
                   ok: 2,
                   error:
-                    {AnotherExprssion, [:atom, :atom, "not_an_atom"],
-                     :some_argument_is_not_an_atom}
+                    {AnotherExprssion, [:atom, :atom],
+                     :supports_only_3_args_due_to_bad_programming_skills}
                 ]}
              }
 
@@ -67,7 +68,7 @@ defmodule Muggle.InterpreterTest do
              AnotherExpression.new([
                :atom,
                :atom,
-               AnotherExpression.new([:atom, :atom, "not_an_atom"])
+               AnotherExpression.new([:atom, :atom])
              ]),
              []
            ) ==
@@ -79,10 +80,14 @@ defmodule Muggle.InterpreterTest do
                    ok: :atom,
                    ok: :atom,
                    error:
-                     {AnotherExprssion, [:atom, :atom, "not_an_atom"],
-                      :some_argument_is_not_an_atom}
+                     {AnotherExprssion, [:atom, :atom],
+                      :supports_only_3_args_due_to_bad_programming_skills}
                  ]
                }
              }
+  end
+
+  test "Default implementation of interpreter validates expressions" do
+    assert Interpreter.run(AnotherExpression.new(["not_an_atom"]), []) == {:error, {Muggle.InterpreterTest.AnotherExpression, [error: :unsupported_type]}}
   end
 end

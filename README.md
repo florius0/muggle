@@ -28,7 +28,8 @@ defmodule Calculator.Interpreter do
   @behaviour Muggle.Interpreter
 
   @impl true
-  def run(%Calculator.Add{args: [a, b]}, opts \\ []), do: {:ok, a + b}
+  def run_expression(%Calculator.Add{args: [a, b]}, _, _), do: {:ok, a + b}
+  def run_expression(_, _, _), do: {:error, :unsupported_expression}
 end
 ```
 

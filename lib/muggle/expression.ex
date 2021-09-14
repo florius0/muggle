@@ -23,7 +23,6 @@ defmodule Muggle.Expression do
       def new(args) when is_list(args), do: %__MODULE__{args: args}
       def new(args), do: %__MODULE__{args: [args]}
 
-      # TODO: Length validation
       @impl true
       def validate(%__MODULE__{args: args} = x) do
         agg =

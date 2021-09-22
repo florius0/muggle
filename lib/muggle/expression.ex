@@ -31,7 +31,7 @@ defmodule Muggle.Expression do
           |> Enum.map(fn {arg, idx} -> _validate_argument(arg, idx, args) end)
 
         if Enum.all?(agg, fn x -> hd(Tuple.to_list(x)) == :ok end) do
-          {:ok, x}
+          {:ok, new(Enum.map(agg, fn {:ok, x} -> x end))}
         else
           {:error, {__MODULE__, agg}}
         end

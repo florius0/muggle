@@ -21,7 +21,7 @@ defmodule Muggle.Interpreter do
           end)
 
         if Enum.all?(agg, fn x -> hd(Tuple.to_list(x)) == :ok end) do
-          struct!(m, args: Enum.map(agg, fn {:ok, x} -> x end))
+          m.new(Enum.map(agg, fn {:ok, x} -> x end))
           |> run_expression(env, opts)
         else
           {:error, {m, agg}}
